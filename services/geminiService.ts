@@ -28,16 +28,16 @@ export const analyzeText = async (text: string): Promise<AnalysisResult> => {
     throw new Error("API klíč nebyl nalezen. Zkontrolujte nastavení VITE_API_KEY ve Vercelu.");
   }
 
+  // Správná inicializace pro novou knihovnu
   const ai = new GoogleGenAI({ apiKey: apiKey });
-  const model = ai.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    systemInstruction: SYSTEM_INSTRUCTION 
-  });
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text }] }],
-      generationConfig: {
+    // Nový způsob volání modelu a struktury dat
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: text,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -62,8 +62,8 @@ export const analyzeText = async (text: string): Promise<AnalysisResult> => {
       }
     });
 
-    const response = await result.response;
-    const resultText = response.text();
+    // V nové knihovně je 'text' vlastnost, ne funkce
+    const resultText = response.text;
     
     if (!resultText) {
       throw new Error("Žádný obsah nebyl vygenerován.");
