@@ -10,8 +10,11 @@ interface ResultCardProps {
 export const ResultCard: React.FC<ResultCardProps> = ({ variation, delay }) => {
   const [copied, setCopied] = React.useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(variation.content);
+const handleCopy = () => {
+    // Spojíme nadpis a obsah, mezi ně dáme dva odřádkování (\n\n) pro čistý vzhled
+    const textToCopy = `${variation.title}\n\n${variation.content}`;
+    
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
