@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Zap, RefreshCcw, Crown, CheckCircle2 } from 'lucide-react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import { analyzeText } from './services/geminiService';
 import { AnalysisResult } from './types';
 import { ResultCard } from './components/ResultCard';
@@ -26,8 +27,6 @@ const App: React.FC = () => {
       localStorage.setItem('brutal_app_pro', 'true');
       // Clean up URL
       window.history.replaceState(null, '', window.location.pathname);
-      // Optional: Show a welcome toast via generic alert for now
-      // In a real app, use a toast component
     } else {
       // 2. Check local storage for existing PRO status
       const storedPro = localStorage.getItem('brutal_app_pro');
@@ -109,10 +108,25 @@ const App: React.FC = () => {
                   className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300"
                 >
                   <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
-                  <span className="text-zinc-300 group-hover:text-white">Get Unlimited</span>
+                  <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
                 </button>
               </>
             )}
+
+            {/* Clerk Authentication */}
+            <div className="pl-4 ml-2 border-l border-zinc-800 flex items-center">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold py-1.5 px-4 rounded-lg transition-colors">
+                    Přihlásit se
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </div>
+
           </div>
         </div>
       </header>
