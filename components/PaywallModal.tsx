@@ -1,5 +1,6 @@
 import React from 'react';
 import { Zap, CheckCircle, X } from 'lucide-react';
+import { useUser, SignInButton } from '@clerk/clerk-react';
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -7,11 +8,17 @@ interface PaywallModalProps {
 }
 
 export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) => {
+  // Vytáhneme si data a informaci, jestli je uživatel přihlášený
+  const { user, isSignedIn } = useUser();
+
   if (!isOpen) return null;
 
   const handleStripeRedirect = () => {
-    // Redirect to the user's specific Stripe payment link
-    window.open('https://buy.stripe.com/test_bJefZibT4fjo0td2sGdby00', '_blank');
+    // Pokud je uživatel přihlášený, přidáme jeho ID rovnou do Stripe odkazu jako client_reference_id
+    const userId = user?.id || '';
+    const stripeLink = `https://buy.stripe.com/test_bJefZibT4fjo0td2sGdby00?client_reference_id=${userId}`;
+    
+    window.open(stripeLink, '_blank');
   };
 
   return (
@@ -61,12 +68,21 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
             ))}
           </div>
 
-          <button 
-            onClick={handleStripeRedirect}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
-          >
-            Odemknout PRO za $9/měsíc
-          </button>
+          {/* Podmíněné zobrazení tlačítek podle stavu přihlášení */}
+          {isSignedIn ? (
+            <button 
+              onClick={handleStripeRedirect}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
+            >
+              Odemknout PRO za $9/měsíc
+            </button>
+          ) : (
+            <SignInButton mode="modal">
+              <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-black py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(255,255,255,0.05)] active:scale-95">
+                Nejdřív se přihlas, pak zaplať
+              </button>
+            </SignInButton>
+          )}
           
           <p className="mt-6 text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-bold">
             Zabezpečeno přes Stripe • Klid v duši
