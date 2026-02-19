@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Zap, RefreshCcw, Crown, CheckCircle2 } from 'lucide-react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import { analyzeText } from './services/geminiService';
 import { AnalysisResult } from './types';
 import { ResultCard } from './components/ResultCard';
@@ -10,32 +10,18 @@ const FREE_LIMIT = 3;
 const MAX_CHARS = 1000;
 
 const App: React.FC = () => {
+  const { user, isSignedIn } = useUser();
   const [input, setInput] = useState('');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isPro, setIsPro] = useState(false);
 
-  // Load usage history and PRO status
+  // Získání PRO statusu přímo z Clerku (místo localStorage)
+  const isPro = user?.publicMetadata?.isPro === true;
+
   useEffect(() => {
-    // 1. Check for Stripe redirect success param
-    const query = new URLSearchParams(window.location.search);
-    if (query.get('success')) {
-      setIsPro(true);
-      localStorage.setItem('brutal_app_pro', 'true');
-      // Clean up URL
-      window.history.replaceState(null, '', window.location.pathname);
-    } else {
-      // 2. Check local storage for existing PRO status
-      const storedPro = localStorage.getItem('brutal_app_pro');
-      if (storedPro === 'true') {
-        setIsPro(true);
-      }
-    }
-
-    // 3. Load usage count
     const storedCount = localStorage.getItem('brutal_app_usage');
     if (storedCount) {
       setUsageCount(parseInt(storedCount, 10));
@@ -45,7 +31,6 @@ const App: React.FC = () => {
   const handleAnalyze = async () => {
     if (!input.trim()) return;
 
-    // Check limits ONLY if not PRO
     if (!isPro && usageCount >= FREE_LIMIT) {
       setShowPaywall(true);
       return;
@@ -59,9 +44,11 @@ const App: React.FC = () => {
       const data = await analyzeText(input);
       setResult(data);
       
-      const newCount = usageCount + 1;
-      setUsageCount(newCount);
-      localStorage.setItem('brutal_app_usage', newCount.toString());
+      if (!isPro) {
+        const newCount = usageCount + 1;
+        setUsageCount(newCount);
+        localStorage.setItem('brutal_app_usage', newCount.toString());
+      }
     } catch (err: any) {
       setError(err.message || "Nastala chyba při analýze.");
     } finally {
@@ -103,17 +90,27 @@ const App: React.FC = () => {
                     zbývá {FREE_LIMIT - usageCount} zdarma
                   </span>
                 )}
-                <button 
-                  onClick={() => setShowPaywall(true)}
-                  className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300"
-                >
-                  <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
-                  <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
-                </button>
+                
+                {/* Ochrana tlačítka: Pokud není přihlášen, vyvolá login. Pokud ano, otevře Paywall. */}
+                {isSignedIn ? (
+                  <button 
+                    onClick={() => setShowPaywall(true)}
+                    className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300"
+                  >
+                    <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
+                    <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
+                  </button>
+                ) : (
+                  <SignInButton mode="modal">
+                    <button className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300">
+                      <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
+                      <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
+                    </button>
+                  </SignInButton>
+                )}
               </>
             )}
 
-            {/* Clerk Authentication */}
             <div className="pl-4 ml-2 border-l border-zinc-800 flex items-center">
               <SignedOut>
                 <SignInButton mode="modal">
@@ -126,14 +123,11 @@ const App: React.FC = () => {
                 <UserButton />
               </SignedIn>
             </div>
-
           </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12">
-        
-        {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
             Udělej svůj text úderný.
@@ -143,7 +137,6 @@ const App: React.FC = () => {
           </p>
         </div>
 
-        {/* Input Section */}
         <div className="max-w-3xl mx-auto mb-16 relative">
           <div className={`absolute -inset-1 rounded-2xl blur opacity-20 transition duration-1000 group-hover:opacity-40 ${isPro ? 'bg-gradient-to-r from-amber-500 to-indigo-600' : 'bg-gradient-to-r from-indigo-500 to-purple-600'}`}></div>
           <div className="relative bg-zinc-900 rounded-xl border border-border shadow-2xl overflow-hidden">
@@ -190,10 +183,8 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* Results Section */}
         {result && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-            {/* Score & Critique */}
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               <div className="md:col-span-1 bg-zinc-900/50 border border-border rounded-xl p-8 flex flex-col items-center justify-center text-center">
                 <span className="text-zinc-500 text-sm font-medium uppercase tracking-wider mb-2">Brutal Score</span>
@@ -211,7 +202,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Variations */}
             <div className="mb-8">
               <h2 className="text-2xl font-bold mb-6 flex items-center">
                 <span className="bg-indigo-500 w-1 h-6 rounded-full mr-3"></span>
@@ -231,7 +221,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border py-8 mt-auto">
         <div className="max-w-5xl mx-auto px-6 text-center text-zinc-600 text-sm">
           <p>&copy; {new Date().getFullYear()} Brutal Copy Auditor. Built with Gemini AI.</p>
