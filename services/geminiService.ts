@@ -34,7 +34,7 @@ export const analyzeText = async (text: string): Promise<AnalysisResult> => {
   try {
     // Nový způsob volání modelu a struktury dat
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       contents: text,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
