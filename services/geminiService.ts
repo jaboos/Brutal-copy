@@ -28,7 +28,7 @@ export const analyzeText = async (text: string): Promise<AnalysisResult> => {
     throw new Error("API klíč nebyl nalezen. Zkontrolujte nastavení VITE_API_KEY ve Vercelu.");
   }
 
-  const ai = new GoogleGenAI(apiKey);
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const model = ai.getGenerativeModel({ 
     model: "gemini-1.5-flash",
     systemInstruction: SYSTEM_INSTRUCTION 
