@@ -1,23 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App';
 import './index.css';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { csCZ } from '@clerk/localizations'; // Zde je import naší češtiny
 
-// Načtení klíče z Vercelu
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Chybí VITE_CLERK_PUBLISHABLE_KEY. Zkontroluj nastavení ve Vercelu.");
+  throw new Error("Missing Publishable Key");
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error("Could not find root element");
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    {/* Tady posíláme češtinu do ClerkProvideru */}
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} localization={csCZ}>
       <App />
     </ClerkProvider>
   </React.StrictMode>
