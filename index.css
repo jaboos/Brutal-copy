@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Obalí úplně celé okno včetně spodního pruhu */
+.cl-cardBox {
+  box-shadow: 0 0 80px 10px rgba(79, 70, 229, 0.25) !important;
+  border: 1px solid rgba(79, 70, 229, 0.4) !important;
+  border-radius: 16px !important; /* Aby rámeček hezky kopíroval kulaté rohy */
+}
+
+/* Vynulujeme ten předchozí pokus, ať tam nemáme dva rámečky přes sebe */
+.cl-card {
+  box-shadow: none !important;
+  border: none !important;
+}
