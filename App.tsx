@@ -68,50 +68,55 @@ const App: React.FC = () => {
 
       {/* Header */}
       <header className="border-b border-border bg-background/50 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className={`p-1.5 rounded-lg ${isPro ? 'bg-amber-500' : 'bg-indigo-600'}`}>
-              <Zap size={20} className="text-white" fill="currentColor" />
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
+          
+          {/* Logo sekce - TEXT ZŮSTÁVÁ, jen je na mobilu menší */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 mr-2">
+            <div className={`p-1 sm:p-1.5 rounded-lg ${isPro ? 'bg-amber-500' : 'bg-indigo-600'}`}>
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" />
             </div>
-            <span className="font-bold text-lg tracking-tight">Brutal Copy</span>
+            <span className="font-bold text-sm sm:text-lg tracking-tight whitespace-nowrap">Brutal Copy</span>
           </div>
           
-          <div className="flex items-center gap-4">
+          {/* Pravá navigační část */}
+          <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
             
-            {/* 1. Uživatel je PRO -> Vidí odznak */}
+            {/* 1. Uživatel je PRO */}
             {isPro ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/50 rounded-lg animate-in fade-in zoom-in duration-500">
-                <Crown size={14} className="text-amber-400 fill-amber-400/20" />
-                <span className="text-xs font-bold text-indigo-300 tracking-wide uppercase">Pro Member</span>
-                <CheckCircle2 size={14} className="text-indigo-500 ml-1" />
+              <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 bg-indigo-500/10 border border-indigo-500/50 rounded-lg animate-in fade-in zoom-in duration-500 whitespace-nowrap">
+                <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400/20" />
+                {/* Na mobilu jen PRO, na PC PRO MEMBER */}
+                <span className="hidden sm:inline text-xs font-bold text-indigo-300 tracking-wide uppercase">Pro Member</span>
+                <span className="sm:hidden text-[10px] font-bold text-indigo-300 tracking-wide uppercase">PRO</span>
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-500 ml-0.5 sm:ml-1 hidden sm:block" />
               </div>
             ) : (
-              /* 2. Uživatel NENÍ PRO (ať už přihlášený nebo ne) -> Vidí zbývající pokusy */
-              <div className="text-sm font-medium text-zinc-400 bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
+              /* 2. Uživatel NENÍ PRO -> Vidí zbývající pokusy */
+              <div className="flex items-center text-[11px] sm:text-sm font-medium text-zinc-400 bg-zinc-900 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-zinc-800 whitespace-nowrap">
                 <span className={usageCount >= FREE_LIMIT ? 'text-red-400' : 'text-white'}>
                   {Math.max(0, FREE_LIMIT - usageCount)}
                 </span>
-                <span className="mx-1">/</span>
-                <span>{FREE_LIMIT} zdarma</span>
+                <span className="mx-0.5 sm:mx-1">/</span>
+                <span>{FREE_LIMIT} <span className="hidden sm:inline">zdarma</span></span>
               </div>
             )}
 
-            {/* 3. Tlačítko "Bez limitů" -> Ukazujeme JEN přihlášeným uživatelům, kteří NEJSOU PRO */}
+            {/* 3. Tlačítko "Bez limitů" */}
             {isSignedIn && !isPro && (
               <button 
                 onClick={() => setShowPaywall(true)}
-                className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                className="group flex items-center gap-1 sm:gap-2 bg-indigo-600 hover:bg-indigo-500 text-[10px] sm:text-xs font-semibold py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(99,102,241,0.2)] whitespace-nowrap"
               >
-                <Crown size={14} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
                 <span className="text-white">Bez limitů</span>
               </button>
             )}
 
-            {/* 4. Autentizace Clerk -> Avatar nebo tlačítko Přihlásit se */}
-            <div className="pl-4 ml-2 border-l border-zinc-800 flex items-center">
+            {/* 4. Autentizace Clerk */}
+            <div className="pl-1.5 sm:pl-4 ml-0.5 sm:ml-2 border-l border-zinc-800 flex items-center shrink-0">
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold py-1.5 px-4 rounded-lg transition-colors">
+                  <button className="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] sm:text-xs font-semibold py-1 sm:py-1.5 px-2 sm:px-4 rounded-lg transition-colors whitespace-nowrap">
                     Přihlásit se
                   </button>
                 </SignInButton>
