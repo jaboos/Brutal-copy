@@ -1,10 +1,7 @@
 /// <reference types="vite/client" />
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-// ... zbytek tvého kódu
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { ClerkProvider } from '@clerk/clerk-react';
