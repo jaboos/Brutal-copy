@@ -4,6 +4,7 @@ import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } 
 import { AnalysisResult } from './types';
 import { ResultCard } from './components/ResultCard';
 import { PaywallModal } from './components/PaywallModal';
+import { AnalysisLoader } from './components/AnalysisLoader';
 
 const FREE_LIMIT = 3;
 const MAX_CHARS = 1000;
@@ -208,7 +209,19 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
+{/* Zobrazení loaderu během analýzy */}
+{loading && (
+  <div className="max-w-5xl mx-auto w-full">
+    <AnalysisLoader />
+  </div>
+)}
 
+{/* Zobrazení samotného výsledku - ten se ukáže, až když loading skončí a máme data */}
+{result && !loading && (
+  <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+    {/* ... tvůj stávající kód pro zobrazení výsledků ... */}
+  </div>
+)}
         {result && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="grid md:grid-cols-3 gap-6 mb-12">
