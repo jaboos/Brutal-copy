@@ -19,16 +19,15 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
     // 1. Základní odkaz na tvůj Stripe Checkout
     const stripeBaseLink = "https://buy.stripe.com/test_bJefZibT4fjo0td2sGdby00";
     
-    // 2. Definujeme, kam se má uživatel vrátit (tvůj localhost nebo ostrá doména)
-    // window.location.origin automaticky vezme adresu, na které zrovna jsi
-    const returnUrl = window.location.origin;
+    // 2. Definujeme návratovou URL s parametrem pro úspěch
+    // window.location.origin vezme brutal.ddbros.cz (nebo localhost) a přidáme trigger pro konfety
+    const successUrl = `${window.location.origin}?payment=success`;
 
     // 3. Sestavíme finální URL s parametry
-    // client_reference_id = pro spárování s Clerk ID
-    // prefilled_email = aby uživatel nemusel psát mail znovu (pokud ho v Clerku už máme)
-    const stripeLink = `${stripeBaseLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(user?.primaryEmailAddress?.emailAddress || '')}`;
+    // Přidáváme success_url, aby Stripe věděl, kam přesně poslat uživatele zpět s naším parametrem
+    const stripeLink = `${stripeBaseLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(user?.primaryEmailAddress?.emailAddress || '')}&success_url=${encodeURIComponent(successUrl)}`;
     
-    // Změna: Otevíráme v tom samém okně (UX standard pro platby)
+    // Otevíráme v tom samém okně pro plynulé UX
     window.location.href = stripeLink;
   };
 
@@ -43,7 +42,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
       {/* Modal Content - obal pro křížek a obsah */}
       <div className="relative w-full max-w-md animate-in fade-in zoom-in duration-300">
         
-        {/* ZAVÍRACÍ KŘÍŽEK - Vynesený ven z overflow-hidden pro jistotu zobrazení na iOS */}
+        {/* ZAVÍRACÍ KŘÍŽEK */}
         <button 
           onClick={onClose} 
           className="absolute -top-3 -right-3 sm:top-4 sm:right-4 z-[110] bg-zinc-900 sm:bg-transparent border-2 border-zinc-800 sm:border-transparent p-2 rounded-full sm:rounded-none text-zinc-400 hover:text-white transition-colors shadow-xl sm:shadow-none"
@@ -83,21 +82,21 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
               ))}
             </div>
 
-{/* Podmíněné zobrazení tlačítek podle stavu přihlášení */}
-{isSignedIn ? (
-  <button 
-    onClick={handleStripeRedirect}
-    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
-  >
-    Odemknout PRO
-  </button>
-) : (
-  <SignInButton mode="modal">
-    <button className="w-full bg-indigo-600/10 hover:bg-indigo-600/20 border-2 border-indigo-600/50 text-indigo-400 text-[11px] sm:text-sm font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all active:scale-95">
-      Založit účet a pokračovat
-    </button>
-  </SignInButton>
-)}
+            {/* Podmíněné zobrazení tlačítek podle stavu přihlášení */}
+            {isSignedIn ? (
+              <button 
+                onClick={handleStripeRedirect}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
+              >
+                Odemknout PRO
+              </button>
+            ) : (
+              <SignInButton mode="modal">
+                <button className="w-full bg-indigo-600/10 hover:bg-indigo-600/20 border-2 border-indigo-600/50 text-indigo-400 text-[11px] sm:text-sm font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all active:scale-95">
+                  Založit účet a pokračovat
+                </button>
+              </SignInButton>
+            )}
             
             <p className="mt-6 text-[9px] sm:text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-bold">
               Zabezpečeno přes Stripe • Klid v duši

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Zap, RefreshCcw, Crown, CheckCircle2 } from 'lucide-react';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';import { analyzeText } from './services/geminiService';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
+import confetti from 'canvas-confetti';
+import { analyzeText } from './services/geminiService';
 import { AnalysisResult } from './types';
 import { ResultCard } from './components/ResultCard';
 import { PaywallModal } from './components/PaywallModal';
@@ -17,9 +19,40 @@ const App: React.FC = () => {
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
-  // Získání PRO statusu přímo z Clerku (místo localStorage)
   const isPro = user?.publicMetadata?.isPro === true;
+
+  // Efekt pro konfety a uvítání po návratu ze Stripe
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      // 1. Vystřelení konfet
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+      }, 250);
+
+      // 2. Zobrazení hlášky
+      setShowSuccessToast(true);
+      
+      // 3. Úklid URL adresy
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // 4. Skrytí hlášky po 6 sekundách
+      setTimeout(() => setShowSuccessToast(false), 6000);
+    }
+  }, []);
 
   useEffect(() => {
     const storedCount = localStorage.getItem('brutal_app_usage');
@@ -66,11 +99,19 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-background text-zinc-100 flex flex-col font-sans selection:bg-indigo-500/30">
       <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} />
 
+      {/* Success Toast pro nového PRO člena */}
+      {showSuccessToast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="bg-indigo-600 border-2 border-indigo-400 text-white px-8 py-4 rounded-2xl shadow-[0_0_50px_rgba(79,70,229,0.5)] flex flex-col items-center">
+            <h3 className="text-xl font-black italic uppercase tracking-wider">Vítej v PRO verzi!</h3>
+            <p className="text-indigo-100 text-sm font-medium">Tvoje munice je teď neomezená.</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-border bg-background/50 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
-          
-          {/* Logo sekce - TEXT ZŮSTÁVÁ, jen je na mobilu menší */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 mr-2">
             <div className={`p-1 sm:p-1.5 rounded-lg ${isPro ? 'bg-amber-500' : 'bg-indigo-600'}`}>
               <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" />
@@ -78,20 +119,15 @@ const App: React.FC = () => {
             <span className="font-bold text-sm sm:text-lg tracking-tight whitespace-nowrap">Brutal Copy</span>
           </div>
           
-          {/* Pravá navigační část */}
           <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
-            
-            {/* 1. Uživatel je PRO */}
             {isPro ? (
               <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 py-1 sm:py-1.5 bg-indigo-500/10 border border-indigo-500/50 rounded-lg animate-in fade-in zoom-in duration-500 whitespace-nowrap">
                 <Crown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400/20" />
-                {/* Na mobilu jen PRO, na PC PRO MEMBER */}
                 <span className="hidden sm:inline text-xs font-bold text-indigo-300 tracking-wide uppercase">Pro Member</span>
                 <span className="sm:hidden text-[10px] font-bold text-indigo-300 tracking-wide uppercase">PRO</span>
                 <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-500 ml-0.5 sm:ml-1 hidden sm:block" />
               </div>
             ) : (
-              /* 2. Uživatel NENÍ PRO -> Vidí zbývající pokusy */
               <div className="flex items-center text-[11px] sm:text-sm font-medium text-zinc-400 bg-zinc-900 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-zinc-800 whitespace-nowrap">
                 <span className={usageCount >= FREE_LIMIT ? 'text-red-400' : 'text-white'}>
                   {Math.max(0, FREE_LIMIT - usageCount)}
@@ -101,7 +137,6 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* 3. Tlačítko "Bez limitů" */}
             {isSignedIn && !isPro && (
               <button 
                 onClick={() => setShowPaywall(true)}
@@ -112,44 +147,37 @@ const App: React.FC = () => {
               </button>
             )}
 
-{/* 4. Autentizace Clerk */}
-<div className="pl-1.5 sm:pl-4 ml-0.5 sm:ml-2 border-l border-zinc-800 flex items-center gap-2 sm:gap-4 shrink-0">
-  <SignedOut>
-    {/* Méně výrazné tlačítko pro stávající uživatele */}
-    <SignInButton mode="modal">
-      <button className="text-zinc-400 hover:text-white text-[10px] sm:text-xs font-semibold transition-colors px-1 sm:px-2">
-        Přihlásit se
-      </button>
-    </SignInButton>
-    
-    {/* Hlavní akční tlačítko pro nové lidi */}
-    <SignUpButton mode="modal">
-      <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] sm:text-xs font-bold py-1.5 sm:py-2 px-3 sm:px-5 rounded-lg transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] active:scale-95 whitespace-nowrap">
-        Vytvořit účet
-      </button>
-    </SignUpButton>
-  </SignedOut>
-
-  <SignedIn>
-    <div className="flex items-center gap-3">
-      {/* Volitelný nápis pro přihlášeného */}
-      {!isPro && (
-        <span className="hidden md:inline text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-          Free Účet
-        </span>
-      )}
-      <UserButton 
-        afterSignOutUrl="/" 
-        appearance={{
-          elements: {
-            avatarBox: "w-8 h-8 sm:w-9 sm:h-9 border border-zinc-700 hover:border-indigo-500 transition-colors"
-          }
-        }}
-      />
-    </div>
-  </SignedIn>
-</div>
-
+            <div className="pl-1.5 sm:pl-4 ml-0.5 sm:ml-2 border-l border-zinc-800 flex items-center gap-2 sm:gap-4 shrink-0">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="text-zinc-400 hover:text-white text-[10px] sm:text-xs font-semibold transition-colors px-1 sm:px-2">
+                    Přihlásit se
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] sm:text-xs font-bold py-1.5 sm:py-2 px-3 sm:px-5 rounded-lg transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] active:scale-95 whitespace-nowrap">
+                    Vytvořit účet
+                  </button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <div className="flex items-center gap-3">
+                  {!isPro && (
+                    <span className="hidden md:inline text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                      Free Účet
+                    </span>
+                  )}
+                  <UserButton 
+                    afterSignOutUrl="/" 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-8 h-8 sm:w-9 sm:h-9 border border-zinc-700 hover:border-indigo-500 transition-colors"
+                      }
+                    }}
+                  />
+                </div>
+              </SignedIn>
+            </div>
           </div>
         </div>
       </header>
@@ -157,7 +185,7 @@ const App: React.FC = () => {
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 bg-gradient-to-br from-white to-zinc-500 bg-clip-text text-transparent">
-            Udělej svůj text úderný.
+            Udej svůj text úderný.
           </h1>
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
             Odstraň korporátní balast. AI analýza, která ti řekne pravdu do očí a přepíše tvůj text tak, aby se četl sám.
@@ -184,9 +212,7 @@ const App: React.FC = () => {
                 className={`flex items-center space-x-2 px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 
                   ${loading || input.length === 0 
                     ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' 
-                    : isPro 
-                      ? 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                      : 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                    : 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
                   }`}
               >
                 {loading ? (
@@ -209,20 +235,14 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
-{/* Zobrazení loaderu během analýzy */}
-{loading && (
-  <div className="max-w-5xl mx-auto w-full">
-    <AnalysisLoader />
-  </div>
-)}
 
-{/* Zobrazení samotného výsledku - ten se ukáže, až když loading skončí a máme data */}
-{result && !loading && (
-  <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
-    {/* ... tvůj stávající kód pro zobrazení výsledků ... */}
-  </div>
-)}
-        {result && (
+        {loading && (
+          <div className="max-w-5xl mx-auto w-full">
+            <AnalysisLoader />
+          </div>
+        )}
+
+        {result && !loading && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               <div className="md:col-span-1 bg-zinc-900/50 border border-border rounded-xl p-8 flex flex-col items-center justify-center text-center">
