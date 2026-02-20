@@ -14,3 +14,14 @@
   box-shadow: none !important;
   border: none !important;
 }
+/* Zvětšení písma v patičce Clerk okna */
+.cl-footerActionText, 
+.cl-footerActionLink {
+  font-size: 0.95rem !important; /* Původní je cca 0.8rem */
+  line-height: 1.5 !important;
+}
+
+/* Pokud chceš, aby ten odkaz (Zaregistrovat se) byl ještě výraznější */
+.cl-footerActionLink {
+  font-weight: 700 !important;
+}

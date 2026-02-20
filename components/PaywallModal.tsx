@@ -14,11 +14,22 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
   if (!isOpen) return null;
 
   const handleStripeRedirect = () => {
-    // Pokud je uživatel přihlášený, přidáme jeho ID rovnou do Stripe odkazu jako client_reference_id
     const userId = user?.id || '';
-    const stripeLink = `https://buy.stripe.com/test_bJefZibT4fjo0td2sGdby00?client_reference_id=${userId}`;
     
-    window.open(stripeLink, '_blank');
+    // 1. Základní odkaz na tvůj Stripe Checkout
+    const stripeBaseLink = "https://buy.stripe.com/test_bJefZibT4fjo0td2sGdby00";
+    
+    // 2. Definujeme, kam se má uživatel vrátit (tvůj localhost nebo ostrá doména)
+    // window.location.origin automaticky vezme adresu, na které zrovna jsi
+    const returnUrl = window.location.origin;
+
+    // 3. Sestavíme finální URL s parametry
+    // client_reference_id = pro spárování s Clerk ID
+    // prefilled_email = aby uživatel nemusel psát mail znovu (pokud ho v Clerku už máme)
+    const stripeLink = `${stripeBaseLink}?client_reference_id=${userId}&prefilled_email=${encodeURIComponent(user?.primaryEmailAddress?.emailAddress || '')}`;
+    
+    // Změna: Otevíráme v tom samém okně (UX standard pro platby)
+    window.location.href = stripeLink;
   };
 
   return (
@@ -72,21 +83,21 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ isOpen, onClose }) =
               ))}
             </div>
 
-            {/* Podmíněné zobrazení tlačítek podle stavu přihlášení */}
-            {isSignedIn ? (
-              <button 
-                onClick={handleStripeRedirect}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
-              >
-                Odemknout PRO
-              </button>
-            ) : (
-              <SignInButton mode="modal">
-                <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white text-[11px] sm:text-sm font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(255,255,255,0.05)] active:scale-95">
-                  Nejdřív se přihlas, pak zaplať
-                </button>
-              </SignInButton>
-            )}
+{/* Podmíněné zobrazení tlačítek podle stavu přihlášení */}
+{isSignedIn ? (
+  <button 
+    onClick={handleStripeRedirect}
+    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm sm:text-base font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)] active:scale-95"
+  >
+    Odemknout PRO
+  </button>
+) : (
+  <SignInButton mode="modal">
+    <button className="w-full bg-indigo-600/10 hover:bg-indigo-600/20 border-2 border-indigo-600/50 text-indigo-400 text-[11px] sm:text-sm font-black py-4 sm:py-5 rounded-2xl uppercase tracking-widest transition-all active:scale-95">
+      Založit účet a pokračovat
+    </button>
+  </SignInButton>
+)}
             
             <p className="mt-6 text-[9px] sm:text-[10px] text-zinc-600 uppercase tracking-[0.2em] font-bold">
               Zabezpečeno přes Stripe • Klid v duši

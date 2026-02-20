@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, Zap, RefreshCcw, Crown, CheckCircle2 } from 'lucide-react';
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
-import { analyzeText } from './services/geminiService';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';import { analyzeText } from './services/geminiService';
 import { AnalysisResult } from './types';
 import { ResultCard } from './components/ResultCard';
 import { PaywallModal } from './components/PaywallModal';
@@ -112,19 +111,43 @@ const App: React.FC = () => {
               </button>
             )}
 
-            {/* 4. Autentizace Clerk */}
-            <div className="pl-1.5 sm:pl-4 ml-0.5 sm:ml-2 border-l border-zinc-800 flex items-center shrink-0">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] sm:text-xs font-semibold py-1 sm:py-1.5 px-2 sm:px-4 rounded-lg transition-colors whitespace-nowrap">
-                    Přihlásit se
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
-            </div>
+{/* 4. Autentizace Clerk */}
+<div className="pl-1.5 sm:pl-4 ml-0.5 sm:ml-2 border-l border-zinc-800 flex items-center gap-2 sm:gap-4 shrink-0">
+  <SignedOut>
+    {/* Méně výrazné tlačítko pro stávající uživatele */}
+    <SignInButton mode="modal">
+      <button className="text-zinc-400 hover:text-white text-[10px] sm:text-xs font-semibold transition-colors px-1 sm:px-2">
+        Přihlásit se
+      </button>
+    </SignInButton>
+    
+    {/* Hlavní akční tlačítko pro nové lidi */}
+    <SignUpButton mode="modal">
+      <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] sm:text-xs font-bold py-1.5 sm:py-2 px-3 sm:px-5 rounded-lg transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] active:scale-95 whitespace-nowrap">
+        Vytvořit účet
+      </button>
+    </SignUpButton>
+  </SignedOut>
+
+  <SignedIn>
+    <div className="flex items-center gap-3">
+      {/* Volitelný nápis pro přihlášeného */}
+      {!isPro && (
+        <span className="hidden md:inline text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+          Free Účet
+        </span>
+      )}
+      <UserButton 
+        afterSignOutUrl="/" 
+        appearance={{
+          elements: {
+            avatarBox: "w-8 h-8 sm:w-9 sm:h-9 border border-zinc-700 hover:border-indigo-500 transition-colors"
+          }
+        }}
+      />
+    </div>
+  </SignedIn>
+</div>
 
           </div>
         </div>
