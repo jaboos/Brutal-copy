@@ -77,6 +77,8 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            
+            {/* 1. Uživatel je PRO -> Vidí odznak */}
             {isPro ? (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/50 rounded-lg animate-in fade-in zoom-in duration-500">
                 <Crown size={14} className="text-amber-400 fill-amber-400/20" />
@@ -84,33 +86,28 @@ const App: React.FC = () => {
                 <CheckCircle2 size={14} className="text-indigo-500 ml-1" />
               </div>
             ) : (
-              <>
-                {usageCount < FREE_LIMIT && (
-                  <span className="text-sm text-zinc-500 font-medium hidden sm:block">
-                    zbývá {FREE_LIMIT - usageCount} zdarma
-                  </span>
-                )}
-                
-                {/* Ochrana tlačítka: Pokud není přihlášen, vyvolá login. Pokud ano, otevře Paywall. */}
-                {isSignedIn ? (
-                  <button 
-                    onClick={() => setShowPaywall(true)}
-                    className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300"
-                  >
-                    <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
-                    <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
-                  </button>
-                ) : (
-                  <SignInButton mode="modal">
-                    <button className="group flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-indigo-500/50 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300">
-                      <Crown size={14} className="text-indigo-500 group-hover:text-indigo-400" />
-                      <span className="text-zinc-300 group-hover:text-white">Bez limitů</span>
-                    </button>
-                  </SignInButton>
-                )}
-              </>
+              /* 2. Uživatel NENÍ PRO (ať už přihlášený nebo ne) -> Vidí zbývající pokusy */
+              <div className="text-sm font-medium text-zinc-400 bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
+                <span className={usageCount >= FREE_LIMIT ? 'text-red-400' : 'text-white'}>
+                  {Math.max(0, FREE_LIMIT - usageCount)}
+                </span>
+                <span className="mx-1">/</span>
+                <span>{FREE_LIMIT} zdarma</span>
+              </div>
             )}
 
+            {/* 3. Tlačítko "Bez limitů" -> Ukazujeme JEN přihlášeným uživatelům, kteří NEJSOU PRO */}
+            {isSignedIn && !isPro && (
+              <button 
+                onClick={() => setShowPaywall(true)}
+                className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+              >
+                <Crown size={14} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="text-white">Bez limitů</span>
+              </button>
+            )}
+
+            {/* 4. Autentizace Clerk -> Avatar nebo tlačítko Přihlásit se */}
             <div className="pl-4 ml-2 border-l border-zinc-800 flex items-center">
               <SignedOut>
                 <SignInButton mode="modal">
@@ -120,9 +117,10 @@ const App: React.FC = () => {
                 </SignInButton>
               </SignedOut>
               <SignedIn>
-                <UserButton />
+                <UserButton afterSignOutUrl="/" />
               </SignedIn>
             </div>
+
           </div>
         </div>
       </header>
