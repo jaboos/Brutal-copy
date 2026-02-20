@@ -36,9 +36,11 @@ export default async function handler(req: any, res: any) {
       const clerkUserId = session.client_reference_id;
 
       if (clerkUserId) {
-        // Zápis do Clerku, že uživatel je PRO
-        await fetch(`https://api.clerk.com/v1/users/${clerkUserId}/metadata`, {
-          method: 'POST',
+        console.log(`Pokouším se updatovat uživatele v Clerku: ${clerkUserId}`);
+        
+        // Zápis do Clerku, že uživatel je PRO - musí tady být PATCH!
+        const clerkRes = await fetch(`https://api.clerk.com/v1/users/${clerkUserId}/metadata`, {
+          method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${process.env.CLERK_SECRET_KEY}`,
             'Content-Type': 'application/json',
@@ -47,6 +49,13 @@ export default async function handler(req: any, res: any) {
             public_metadata: { isPro: true }
           }),
         });
+
+        if (!clerkRes.ok) {
+          const errorText = await clerkRes.text();
+          console.error('Clerk API Error:', clerkRes.status, errorText);
+        } else {
+          console.log('Clerk update úspěšný!');
+        }
       }
     }
 
